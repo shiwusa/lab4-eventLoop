@@ -1,3 +1,5 @@
+package engine
+
 type Loop struct {
 		sync.Mutex
 		q          *commandsQueue
