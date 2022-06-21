@@ -1,30 +1,46 @@
 package engine
 
 type Loop struct {
+	sync.Mutex
 	q          *commandsQueue
-	stop       bool //stop sequest
-	stopSignal chan struct{}
-}
-
-func (l *Loop) Start() {
-	l.q = &commandsQueue{
-		notEmpty: make(chan struct{}),
-	}
-	l.stopSignal = make(chan struct{})
-
-	go func() {
-		for !l.stop || !l.q.empty() {
-			cmd := l.q.pull()
-			cmd.Execute(l)
-		}
-		l.stopSignal <- struct{}{}
-	}()
+	stop       bool
+	busy       bool
+	stopSignal chan bool
 }
 
 func (l *Loop) Post(cmd Command) {
-	if !l.stop {
-		l.q.push(cmd)
+	l.Lock()
+	defer l.Unlock()
+	l.q.enqueue(cmd)
+	if l.busy && !l.stop {
+		l.startRoutine()
 	}
+}
+
+func (l *Loop) startRoutine() {
+	l.busy = false
+	go func() {
+		for {
+			if l.q.length() > 0 {
+				cmd := l.q.dequeue()
+				cmd.Execute(l)
+			} else if l.stop {
+				l.stopSignal <- true
+				return
+			} else {
+				l.Lock()
+				defer l.Unlock()
+				l.busy = true
+				return
+			}
+		}
+	}()
+}
+
+func (l *Loop) Start() {
+	l.stopSignal = make(chan bool, 1)
+	l.q = &commandsQueue{}
+	l.startRoutine()
 }
 
 type stopCommand struct{}
