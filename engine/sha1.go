@@ -2,6 +2,7 @@ package engine
 
 import (
 	"crypto/sha1"
+	"fmt"
 )
 
 type Sha1Comm struct {
@@ -10,6 +11,6 @@ type Sha1Comm struct {
 
 func (sha1Comm *Sha1Comm) Execute(handler Handler) {
 	res := sha1.Sum([]byte(sha1Comm.Arg))
-	str := string(res[:])
+	str := fmt.Sprintf("%x", res)
 	handler.Post(&PrintComm{Arg: str})
 }
