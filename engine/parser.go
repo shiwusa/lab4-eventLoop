@@ -8,7 +8,7 @@ import (
 func Parse(textCommand string) Command {
 	split := strings.Fields(textCommand)
 	if split[0] == "print" {
-		if len(split) != 1 {
+		if len(split) != 2 {
 			return InvalidArgsCount(split[0], 1, len(split)-1)
 		} else {
 			command := PrintComm{
@@ -17,7 +17,7 @@ func Parse(textCommand string) Command {
 			return &command
 		}
 	} else if split[0] == "sha1" {
-		if len(split) != 4 {
+		if len(split) != 2 {
 			return InvalidArgsCount(split[0], 1, len(split)-1)
 		} else {
 			command := Sha1Comm{
